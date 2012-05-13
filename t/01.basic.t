@@ -59,13 +59,16 @@ diag "Lando (${\$lando->value}): ${ \$lando->show }" ;
 
 # Hand is Called during any Betting Round after the third.
 
-ok my $winner = $round->winner, "we have a winner";
 
-my $winner_name = $winner eq $han ? 'han' : 'lando';
-my $loser_name = $winner eq $han ? 'lando' : 'han';
-{
-        no strict "refs";
-diag ucfirst($winner_name) . ' wins with';# .${$winner_name}->show;
-diag ucfirst($loser_name) . ' lost with' ;#.${$loser_name}->show;
+my $winner = $round->winner;
+
+if (defined $winner) {
+        pass("we have a winner!");
+        diag (($winner == $han ? 'Han' : 'Lando' ) . ' wins with ' . $winner->show);
+} else {
+        fail('Something is wrong, Han could have won') unless $han->bombed_out;
+        fail('Something is wrong, Lando could have won') unless $lando->bombed_out;
+        pass('Everyone bombed out') if $han->bombed_out && $lando->bombed_out;
 }
+
 done_testing;

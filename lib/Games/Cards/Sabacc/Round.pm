@@ -67,13 +67,20 @@ sub winner {
 
     return unless grep { !$_->bombed_out } $self->hands;
 
-    my @left = sort { abs( $b->value ) <=> abs( $a->value ) }
+    my @left = sort { abs( $b->value ) <=> abs( $a->value ) || $b->value <=> $a->value }
         grep { !$_->bombed_out } $self->hands;
 
-    my ( $matches, $rest ) = part {$_->value == $left[1]->value } @left;
-    return shift @$matches if @$matches == 1;
-    return $self->sudden_demise(@$matches);
+    my @matches = grep { $_->value == $left[0]->value } @left;
+    return shift @matches if @matches == 1;
+    return $self->sudden_demise(@matches);
 }
+
+sub sudden_demise {
+    my ( $self, @hands ) = @_;
+    $self->draw($_) for @hands;
+    return $self->winner();
+}
+
 __PACKAGE__->meta->make_immutable;
 1;
 __END__
