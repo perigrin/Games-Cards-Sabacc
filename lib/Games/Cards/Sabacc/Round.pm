@@ -50,41 +50,30 @@ sub winner {
         if ( @idiots_array > 1 ) {
             return $self->sudden_demise(@idiots_array);
         }
-        return @idiots_array;
+        return shift @idiots_array;
     }
 
     if ( my @pure_sabacc = grep { $_->pure_sabacc } $self->hands ) {
-        return @pure_sabacc if @pure_sabacc == 1;
+        return shift @pure_sabacc if @pure_sabacc == 1;
 
-        my ($pos, $neg) = part { $_->value > 0 } @pure_sabacc;
+        my ( $pos, $neg ) = part { $_->value < 0 } @pure_sabacc;
 
-        return $self->sudden_demise(@$pos) if (@$pos > 1);
-        return @$pos if (@$pos > 0);
+        return $self->sudden_demise(@$pos) if ( @$pos > 1 );
+        return shift @$pos if ( @$pos > 0 );
 
-        return $self->sudden_demise(@$neg) if (@$neg > 1);
-        return @$neg if (@$neg > 0);
+        return $self->sudden_demise(@$neg) if ( @$neg > 1 );
+        return shift @$neg if ( @$neg > 0 );
     }
 
-    my @survivors = grep { !$_->bombed_out } $self->hands;
-    return unless @survivors;
+    return unless grep { !$_->bombed_out } $self->hands;
 
-    @survivors = sort { abs($a->value)  <=> abs($b->value) } @survivors;
-    my $top = shift @survivors;
+    my @left = sort { abs( $b->value ) <=> abs( $a->value ) }
+        grep { !$_->bombed_out } $self->hands;
 
-    if ( my @others = grep { abs($_->value) == abs($top->value) } @survivors ) {
-
-        my ($pos, $neg) = part { $_->value > 0 } ( $top, @others);
-
-        return $self->sudden_demise(@$pos) if (@$pos > 1);
-        return @$pos if (@$pos > 0);
-
-        return $self->sudden_demise(@$neg) if (@$neg > 1);
-        return @$neg if (@$neg > 0);
-    }
-
-    return $top;
+    my ( $matches, $rest ) = part {$_->value == $left[1]->value } @left;
+    return shift @$matches if @$matches == 1;
+    return $self->sudden_demise(@$matches);
 }
-
 __PACKAGE__->meta->make_immutable;
 1;
 __END__
